@@ -13,8 +13,8 @@ import streamlit as st
 st.set_page_config(page_title="Perbandingan Revisi Laravel", page_icon="↔", layout="wide")
 
 BASE_DIR = Path(__file__).resolve().parent
-OLD_PROJECT = BASE_DIR / "data" / "evan_lama"
-NEW_PROJECT = BASE_DIR / "data" / "hasil_revisi"
+OLD_PROJECT = BASE_DIR / "data" / "evan_asli"
+NEW_PROJECT = BASE_DIR / "data" / "evan_revisi"
 
 TEXT_EXTENSIONS = {
     ".blade.php", ".css", ".csv", ".env", ".example", ".html", ".js",
@@ -67,9 +67,9 @@ def read_project(project_folder: str) -> dict[str, ProjectFile]:
 
 def status_for(old: ProjectFile | None, new: ProjectFile | None) -> str:
     if old is None:
-        return "Ditambahkan"
+        return "Hanya di revisi"
     if new is None:
-        return "Dihapus"
+        return "Hanya di asli"
     return "Diubah" if old.digest != new.digest else "Sama"
 
 
@@ -100,7 +100,7 @@ def show_diff(old: ProjectFile | None, new: ProjectFile | None, path: str) -> No
         difflib.unified_diff(
             old_text.splitlines(keepends=True),
             new_text.splitlines(keepends=True),
-            fromfile="Evan — lama", tofile="Hasil revisi",
+            fromfile="Evan — asli", tofile="Evan — revisi",
         )
     )
     if changes:
@@ -121,7 +121,7 @@ st.markdown(
     </style>
     <div class="hero">
       <h1>↔ Perbandingan Revisi Laravel</h1>
-      <p>Versi Laravel lama Evan di kiri, hasil revisi di kanan. Tidak perlu memilih ZIP lagi.</p>
+      <p>Versi asli Evan di kiri, hasil revisi Evan di kanan. Tidak perlu memilih ZIP lagi.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -136,26 +136,26 @@ new_files = read_project(str(NEW_PROJECT))
 all_paths = sorted(set(old_files) | set(new_files), key=str.lower)
 comparison = [(path, status_for(old_files.get(path), new_files.get(path))) for path in all_paths]
 changed_files = [(path, status) for path, status in comparison if status != "Sama"]
-counts = {status: sum(1 for _, value in comparison if value == status) for status in ("Diubah", "Ditambahkan", "Dihapus", "Sama")}
+counts = {status: sum(1 for _, value in comparison if value == status) for status in ("Diubah", "Hanya di revisi", "Hanya di asli", "Sama")}
 
 left_header, right_header = st.columns(2)
 with left_header:
-    st.markdown("<div class='label'>← Laravel lama Evan</div>", unsafe_allow_html=True)
+    st.markdown("<div class='label'>← Laravel asli Evan</div>", unsafe_allow_html=True)
     st.caption(f"{len(old_files)} file source")
 with right_header:
-    st.markdown("<div class='label'>Hasil revisi →</div>", unsafe_allow_html=True)
+    st.markdown("<div class='label'>Revisi Evan →</div>", unsafe_allow_html=True)
     st.caption(f"{len(new_files)} file source")
 
 metric_one, metric_two, metric_three, metric_four = st.columns(4)
 metric_one.metric("Diubah", counts["Diubah"])
-metric_two.metric("Ditambahkan", counts["Ditambahkan"])
-metric_three.metric("Dihapus", counts["Dihapus"])
+metric_two.metric("Hanya di revisi", counts["Hanya di revisi"])
+metric_three.metric("Hanya di asli", counts["Hanya di asli"])
 metric_four.metric("Sama", counts["Sama"])
 
 st.divider()
 filters = st.multiselect(
-    "Jenis perubahan", ["Diubah", "Ditambahkan", "Dihapus"],
-    default=["Diubah", "Ditambahkan", "Dihapus"],
+    "Jenis perubahan", ["Diubah", "Hanya di revisi", "Hanya di asli"],
+    default=["Diubah", "Hanya di revisi", "Hanya di asli"],
 )
 show_line_diff = st.toggle("Tampilkan perbedaan per baris", value=False)
 visible_files = [(path, status) for path, status in changed_files if status in filters]
@@ -165,17 +165,17 @@ if not visible_files:
     st.stop()
 
 st.caption(f"Menampilkan {len(visible_files)} dari {len(changed_files)} file yang berubah.")
-css_class = {"Diubah": "changed", "Ditambahkan": "added", "Dihapus": "deleted"}
+css_class = {"Diubah": "changed", "Hanya di revisi": "added", "Hanya di asli": "deleted"}
 
 for path, status in visible_files:
     with st.expander(f"{status} — {path}"):
         st.markdown(f"<span class='status {css_class[status]}'>{status}</span>", unsafe_allow_html=True)
         old_column, new_column = st.columns(2)
         with old_column:
-            st.markdown("**Laravel lama Evan**")
+            st.markdown("**Laravel asli Evan**")
             show_version(old_files.get(path), path, "File belum ada pada versi lama.")
         with new_column:
-            st.markdown("**Hasil revisi**")
+            st.markdown("**Revisi Evan**")
             show_version(new_files.get(path), path, "File tidak ada pada hasil revisi.")
         if show_line_diff:
             st.markdown("**Perbedaan baris**")
