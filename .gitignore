@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.streamlit/secrets.toml
+.env
+data/**/.env
+data/**/.env.*
+!data/**/.env.example
+data/**/vendor/
+data/**/node_modules/
+data/**/database/database.sqlite
+data/**/.phpunit.result.cache
+data/**/storage/logs/
+data/**/storage/framework/
